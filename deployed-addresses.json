@@ -1,0 +1,8 @@
+{
+  "evmFlowTestnet": {
+    "MyNFT": "0x4b5CA745aF3F358B902A129C1a3744B668aE5889"
+  },
+  "evmFlowMainnet": {
+    "MyNFT": "0xeC3e2177Db40E0B7F6F7C99fc1A2c73fEDcFf369"
+  }
+}
