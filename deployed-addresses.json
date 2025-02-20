@@ -1,8 +1,39 @@
 {
   "evmFlowTestnet": {
-    "MyNFT": "0x4b5CA745aF3F358B902A129C1a3744B668aE5889"
+    "MyNFT": {
+      "latest": "0x4b5CA745aF3F358B902A129C1a3744B668aE5889",
+      "history": [
+        {
+          "address": "0x4b5CA745aF3F358B902A129C1a3744B668aE5889",
+          "timestamp": 1709347200000,
+          "deployer": "0x...",
+          "tag": "v1.0.0"
+        },
+        {
+          "address": "0x5a6CB745aF3F358B902A129C1a3744B668aE7991",
+          "timestamp": 1709347300000,
+          "deployer": "0x...",
+          "tag": "v1.0.1-beta"
+        }
+      ]
+    }
   },
   "evmFlowMainnet": {
-    "MyNFT": "0xeC3e2177Db40E0B7F6F7C99fc1A2c73fEDcFf369"
+    "MyNFT": {
+      "latest": "0xf16fc1689047d8cE068b16FBf4F6e942b2f9Fbf4",
+      "history": [
+        {
+          "address": "0xeC3e2177Db40E0B7F6F7C99fc1A2c73fEDcFf369",
+          "timestamp": 1709347200000,
+          "deployer": "0x..."
+        },
+        {
+          "address": "0xf16fc1689047d8cE068b16FBf4F6e942b2f9Fbf4",
+          "timestamp": 1740093674324,
+          "deployer": "0x825d7531f79be811e6ed5bd94c9c02d0eb493848",
+          "tag": "ONFT"
+        }
+      ]
+    }
   }
 }

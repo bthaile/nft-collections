@@ -1,13 +1,15 @@
 import hre from "hardhat";
 import { readFileSync } from "fs";
 import { join } from "path";
+import { getDeploymentByTag } from "./deploy";
 
-async function getDeployedAddress(): Promise<string> {
+async function getDeployedAddressBySymbol(symbol: string): Promise<string> {
   const network = hre.network.name;
-  const addresses = JSON.parse(
-    readFileSync(join(__dirname, "../deployed-addresses.json"), "utf-8")
-  );
-  return addresses[network].MyNFT as `0x${string}`;
+  const deployment = getDeploymentByTag(network, symbol);
+  if (!deployment) {
+    throw new Error(`No deployment found for symbol ${symbol}`);
+  }
+  return deployment.address as `0x${string}`;
 }
 
 interface NFTMetadata {
@@ -21,11 +23,19 @@ interface NFTMetadata {
 }
 
 async function main() {
-  const NFT_CONTRACT_ADDRESS = await getDeployedAddress();
+  // Get symbol from command line arguments
+  const symbol = process.argv.find((arg) => arg.startsWith("--symbol="))?.split("=")[1];
+  if (!symbol) {
+    throw new Error("Please provide a symbol with --symbol=SYMBOL");
+  }
+
+  const NFT_CONTRACT_ADDRESS = await getDeployedAddressBySymbol(symbol);
   const nftContract = await hre.viem.getContractAt("MyNFT", NFT_CONTRACT_ADDRESS as `0x${string}`);
 
+  console.log(`\nVerifying NFT contract with symbol ${symbol} at ${NFT_CONTRACT_ADDRESS}`);
+
   // Check first NFT (ID 0)
-  const uri = await nftContract.read.tokenURI([0n]);
+  const uri = await nftContract.read.tokenURI([0n]) as string;
   console.log('\nRaw Token URI:', uri);
   
   // Decode base64 metadata
@@ -48,15 +58,20 @@ async function main() {
     if (!response.ok) {
       console.log('  Image URL might be inaccessible:', response.status, response.statusText);
     }
-  } catch (error) {
-    console.log('- Image Accessibility: ✗');
-    console.log('  Error accessing image:', error.message);
+  } catch (error: unknown) {
+    if (error instanceof Error) {
+      console.log('- Image Accessibility: ✗');
+      console.log('  Error accessing image:', error.message);
+    } else {
+      console.log('- Image Accessibility: ✗');
+      console.log('  Error accessing image:', String(error));
+    }
   }
 }
 
 main()
   .then(() => process.exit(0))
-  .catch((error) => {
-    console.error(error);
+  .catch((error: Error) => {
+    console.error(error.message);
     process.exit(1);
   }); 

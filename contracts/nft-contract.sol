@@ -15,10 +15,11 @@ contract MyNFT is ERC721, ERC721Burnable, Ownable {
     mapping(uint256 => string) private _tokenURIs;  // Store the full tokenURI
     string private _contractURI;
 
-    constructor(address initialOwner)
-        ERC721("MyNFT", "MNFT")
-        Ownable(initialOwner)
-    {}
+    constructor(
+        string memory name,
+        string memory symbol,
+        address initialOwner
+    ) ERC721(name, symbol) Ownable(initialOwner) {}
 
     function mint(
         string memory uri  // Pass in the full tokenURI
