@@ -25,7 +25,10 @@
     "verify:nft": "hardhat verify-contract --network evmFlowMainnet --symbol 'ONFT'",
     "deploy:mainnet:NFT": "hardhat run scripts/deploy.ts --network evmFlowMainnet --symbol 'ONFT' --name 'Our NFT'",
     "transfer:testnet": "hardhat transfer --network evmFlowTestnet",
-    "transfer:mainnet": "hardhat transfer --network evmFlowMainnet"
+    "transfer:mainnet": "hardhat transfer --network evmFlowMainnet",
+    "build:web": "tsc web/index.ts --outDir dist/web --esModuleInterop true && cp web/index.html web/styles.css dist/web/",
+    "build": "npm run build:web",
+    "serve": "http-server dist/web"
   },
   "keywords": [],
   "author": "",
@@ -48,9 +51,10 @@
     "dotenv": "^16.4.7",
     "hardhat": "^2.22.18",
     "hardhat-gas-reporter": "^1.0.8",
+    "http-server": "^14.1.1",
     "solidity-coverage": "^0.8.0",
     "ts-node": "^10.9.2",
     "typescript": "~5.4.5",
-    "viem": "^2.7.6"
+    "viem": "^2.23.3"
   }
 }
