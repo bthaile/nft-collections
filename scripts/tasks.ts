@@ -1,2 +1,4 @@
 import "./deploy";
-import "./mint"; 
+import "./mint";
+import "./verify-metadata";
+import "./transfer"; 
