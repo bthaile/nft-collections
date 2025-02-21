@@ -4,11 +4,12 @@ pragma solidity ^0.8.28;
 
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Burnable.sol";
+import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
 import "@openzeppelin/contracts/utils/Base64.sol";
 
-contract MyNFT is ERC721, ERC721Burnable, Ownable {
+contract MyNFT is ERC721, ERC721Burnable, ERC721Enumerable, Ownable {
     using Strings for uint256;
 
     uint256 private _tokenIds;
@@ -21,9 +22,7 @@ contract MyNFT is ERC721, ERC721Burnable, Ownable {
         address initialOwner
     ) ERC721(name, symbol) Ownable(initialOwner) {}
 
-    function mint(
-        string memory uri  // Pass in the full tokenURI
-    ) public {
+    function mint(string memory uri) public {
         uint256 newTokenId = _tokenIds++;
         _safeMint(msg.sender, newTokenId);
         _tokenURIs[newTokenId] = uri;  // Store the URI
@@ -43,7 +42,7 @@ contract MyNFT is ERC721, ERC721Burnable, Ownable {
     function supportsInterface(bytes4 interfaceId)
         public
         view
-        override
+        override(ERC721, ERC721Enumerable)
         returns (bool)
     {
         return super.supportsInterface(interfaceId);
@@ -55,5 +54,23 @@ contract MyNFT is ERC721, ERC721Burnable, Ownable {
 
     function contractURI() public view returns (string memory) {
         return _contractURI;
+    }
+
+    // Required overrides for ERC721Enumerable
+    function _update(address to, uint256 tokenId, address auth)
+        internal
+        virtual
+        override(ERC721, ERC721Enumerable)
+        returns (address)
+    {
+        return super._update(to, tokenId, auth);
+    }
+
+    function _increaseBalance(address account, uint128 value)
+        internal
+        virtual
+        override(ERC721, ERC721Enumerable)
+    {
+        super._increaseBalance(account, value);
     }
 }

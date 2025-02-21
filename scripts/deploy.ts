@@ -65,31 +65,36 @@ async function saveDeployedAddress(
   writeFileSync(filePath, JSON.stringify(addresses, null, 2));
 }
 
-task("deploy", "Deploy the NFT contract")
-  .addParam("symbol", "Token symbol", "MNFT")
-  .addParam("name", "Token name", "MyNFT")
+task("deploy", "Deploy NFT contract")
+  .addParam("symbol", "Token symbol")
+  .addParam("name", "Token name")
   .setAction(async (taskArgs, hre: HardhatRuntimeEnvironment) => {
-    const name = taskArgs.name;
     const symbol = taskArgs.symbol.toUpperCase();
-    
-    const [deployer] = await hre.viem.getWalletClients();
-    const publicClient = await hre.viem.getPublicClient();
-    
-    console.log("Deploying contracts with the account:", deployer.account.address);
-    console.log("NFT Name:", name);
-    console.log("NFT Symbol:", symbol);
-    const balance = await publicClient.getBalance({ address: deployer.account.address });
-    console.log("Account balance:", balance.toString());
+    const name = taskArgs.name;
+
+    console.log(`Deploying NFT contract with name: ${name} and symbol: ${symbol}`);
 
     const nftContract = await hre.viem.deployContract("MyNFT", [
       name,
       symbol,
-      deployer.account.address
+      (await hre.viem.getWalletClients())[0].account.address
     ]);
-    console.log("NFT Contract deployed to:", nftContract.address);
+
+    console.log("Contract deployed to:", nftContract.address);
     
-    await saveDeployedAddress(nftContract.address, deployer.account.address, symbol, hre.network.name);
-});
+    // Save deployment info
+    const deployment = {
+      network: hre.network.name,
+      address: nftContract.address,
+      deployer: (await hre.viem.getWalletClients())[0].account.address,
+      symbol: symbol
+    };
+
+    // Add code to save to deployed-addresses.json
+    await saveDeployedAddress(nftContract.address, (await hre.viem.getWalletClients())[0].account.address, symbol, hre.network.name);
+
+    return deployment;
+  });
 
 task("get-deployment", "Get contract address for a symbol")
   .addParam("symbol", "Token symbol")
