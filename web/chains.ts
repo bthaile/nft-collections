@@ -14,7 +14,7 @@ export const evmFlowMainnet = defineChain({
     public: { http: ['https://mainnet.evm.nodes.onflow.org'] },
   },
   blockExplorers: {
-    default: { name: 'Flowscan', url: 'https://evm.flowscan.org' },
+    default: { name: 'Flowscan', url: 'https://evm.flowscan.io' },
   },
   contracts: {
     multicall3: {
@@ -36,5 +36,8 @@ export const evmFlowTestnet = defineChain({
   rpcUrls: {
     default: { http: ['https://testnet.evm.nodes.onflow.org'] },
     public: { http: ['https://testnet.evm.nodes.onflow.org'] },
+  },
+  blockExplorers: {
+    default: { name: 'Flowscan', url: 'https://evm-testnet.flowscan.io' },
   },
 }); 

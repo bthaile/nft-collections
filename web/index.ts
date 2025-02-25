@@ -3,6 +3,7 @@ import { evmFlowMainnet, evmFlowTestnet } from './chains';
 import { NFTMetadata, createMetadata } from './types';
 import MyNFTArtifact from '../artifacts/contracts/nft-contract.sol/MyNFT.json';
 import deployedAddresses from '../deployed-addresses.json';
+import { fetchContractTransactions } from './transactions';
 
 interface CollectionMetadata {
   name: string;
@@ -28,6 +29,13 @@ const CHAIN_ID_TO_NETWORK = {
   '0x2eb': 'evmFlowMainnet', // 747
   '0x221': 'evmFlowTestnet'  // 545
 };
+
+interface MintHistoryItem {
+  tokenId: number;
+  timestamp: Date;
+  txHash: `0x${string}`;
+  collection?: string;
+}
 
 async function fetchCollectionMetadata(contractAddress: string): Promise<CollectionMetadata | null> {
   try {
@@ -360,7 +368,7 @@ async function mintNFT(tokenUri: string) {
     showToast('Failed to mint NFT', 'error');
   } finally {
     // Reset button state
-    if (mintButton) mintButton.disabled = false;
+    if (mintButton) (mintButton as HTMLButtonElement).disabled = false;
     if (mintSpinner) mintSpinner.classList.add('hidden');
     if (mintText) mintText.textContent = 'Mint NFT';
   }
@@ -383,6 +391,7 @@ function updateStatus(message: string, type: 'success' | 'error' | 'info') {
 }
 
 async function fetchUserMintHistory(address: string, contractAddress: string) {
+  console.log('Fetching mint history for:', { address, contractAddress });
   try {
     const logs = await publicClient.getLogs({
       address: contractAddress as `0x${string}`,
@@ -400,10 +409,12 @@ async function fetchUserMintHistory(address: string, contractAddress: string) {
         to: address as `0x${string}`
       }
     });
+    console.log('Found transfer logs:', logs);
     
     const mintsWithTimestamps = await Promise.all(
       logs.map(async log => {
         const block = await publicClient.getBlock({ blockHash: log.blockHash });
+        console.log('Block data for log:', { blockHash: log.blockHash, block });
         return {
           tokenId: parseInt(log.topics[3], 16),
           timestamp: new Date(Number(block.timestamp) * 1000),
@@ -412,6 +423,7 @@ async function fetchUserMintHistory(address: string, contractAddress: string) {
       })
     );
     
+    console.log('Processed mints:', mintsWithTimestamps);
     return mintsWithTimestamps;
   } catch (error) {
     console.error('Error fetching mint history:', error);
@@ -420,23 +432,37 @@ async function fetchUserMintHistory(address: string, contractAddress: string) {
 }
 
 async function updateMintHistory() {
+  console.log('Updating mint history with account:', currentAccount, 'network:', currentNetwork);
   if (!currentAccount || !currentNetwork) return;
 
   const historyContainer = document.getElementById('mintHistory');
   if (!historyContainer) return;
 
   const networkDeployments = deployedAddresses[currentNetwork];
+  console.log('Network deployments:', networkDeployments);
   if (!networkDeployments?.MyNFT?.history) return;
 
-  let allMints = [];
+  let allMints: MintHistoryItem[] = [];
   for (const deployment of networkDeployments.MyNFT.history) {
-    const mints = await fetchUserMintHistory(currentAccount, deployment.address);
-    allMints.push(...mints.map(mint => ({ ...mint, collection: deployment.tag })));
+    console.log('Checking deployment:', deployment);
+    const transactions = await fetchContractTransactions(deployment.address, currentAccount);
+    const mints = transactions
+      .filter(tx => tx.method === 'mint' && tx.status === 'ok')
+      .map(tx => ({
+        tokenId: parseInt(tx.decoded_input?.parameters[0]?.value || '0', 16),
+        timestamp: new Date(tx.timestamp),
+        txHash: tx.hash as `0x${string}`,
+        collection: deployment.tag
+      }));
+    allMints.push(...mints);
   }
+
+  console.log('All mints collected:', allMints);
 
   // Sort by timestamp, newest first
   allMints.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
 
+  const chain = currentNetwork === 'evmFlowMainnet' ? evmFlowMainnet : evmFlowTestnet;
   historyContainer.innerHTML = `
     <h3 class="text-lg font-semibold text-gray-900 mb-4">Your Mint History</h3>
     ${allMints.length === 0 ? 
