@@ -3,6 +3,9 @@ interface TransactionItem {
   method: string;
   timestamp: string;
   status: string;
+  from: {
+    hash: string;
+  };
   decoded_input?: {
     method_call: string;
     parameters: Array<{
@@ -10,6 +13,7 @@ interface TransactionItem {
       value: string;
     }>;
   };
+  topics: string[];
 }
 
 interface TransactionResponse {
@@ -28,6 +32,7 @@ export async function fetchContractTransactions(contractAddress: string, userAdd
     }
 
     const data: TransactionResponse = await response.json();
+    console.log('Transaction data:', data.items[0]); // Log first transaction for debugging
     return data.items;
   } catch (error) {
     console.error('Error fetching transactions:', error);

@@ -1,7 +1,21 @@
 {
-    "name": "Forest Mist NFT",
-    "description": "Mystical forest shrouded in morning mist",
-    "image": "https://images.unsplash.com/photo-1511497584788-876760111969?w=1200",
-    "external_url": "https://images.unsplash.com/photo-1511497584788-876760111969?w=1200",
-    "background_color": "green"
-} 
+  "name": "Forest Mist NFT",
+  "description": "Mystical forest shrouded in morning mist",
+  "image": "https://images.unsplash.com/photo-1511497584788-876760111969?w=1200",
+  "external_url": "https://images.unsplash.com/photo-1511497584788-876760111969?w=1200",
+  "background_color": "green",
+  "attributes": [
+    {
+      "trait_type": "Trees",
+      "value": "Bunches"
+    },
+    {
+      "trait_type": "Rocks",
+      "value": "Boulders"
+    },
+    {
+      "trait_type": "Mushrooms",
+      "value": "Many"
+    }
+  ]
+}

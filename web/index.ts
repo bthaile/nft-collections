@@ -1,6 +1,5 @@
 import { createPublicClient, createWalletClient, custom, http, decodeEventLog } from 'viem';
 import { evmFlowMainnet, evmFlowTestnet } from './chains';
-import { NFTMetadata, createMetadata } from './types';
 import MyNFTArtifact from '../artifacts/contracts/nft-contract.sol/MyNFT.json';
 import deployedAddresses from '../deployed-addresses.json';
 import { fetchContractTransactions } from './transactions';
@@ -31,7 +30,6 @@ const CHAIN_ID_TO_NETWORK = {
 };
 
 interface MintHistoryItem {
-  tokenId: number;
   timestamp: Date;
   txHash: `0x${string}`;
   collection?: string;
@@ -206,6 +204,8 @@ async function initClients(chainId: string) {
 
   // Listen for network changes
   window.ethereum.on('chainChanged', handleNetworkChange);
+  // Listen for account changes
+  window.ethereum.on('accountsChanged', handleAccountChange);
 }
 
 async function handleNetworkChange(chainId: string) {
@@ -221,11 +221,77 @@ async function handleNetworkChange(chainId: string) {
   await updateMintHistory();
 }
 
+async function handleAccountChange(accounts: string[]) {
+  if (accounts.length === 0) {
+    // User disconnected their wallet
+    currentAccount = undefined;
+    // Reset wallet client
+    walletClient = createWalletClient({
+      chain: currentNetwork === 'evmFlowMainnet' ? evmFlowMainnet : evmFlowTestnet,
+      transport: custom(window.ethereum)
+    });
+    const connectButton = document.getElementById('connectWallet');
+    if (connectButton) {
+      connectButton.textContent = 'Connect';
+      connectButton.classList.remove('bg-red-600', 'hover:bg-red-700');
+      connectButton.classList.add('bg-blue-600', 'hover:bg-blue-700');
+    }
+    const mintForm = document.getElementById('mintForm');
+    const mintHistory = document.getElementById('mintHistory');
+    if (mintForm) mintForm.classList.add('hidden');
+    if (mintHistory) mintHistory.innerHTML = '';
+    updateStatus('Wallet disconnected', 'info');
+  } else {
+    // Get the currently selected account from MetaMask
+    try {
+      const [selectedAccount] = await window.ethereum.request({ method: 'eth_requestAccounts' });
+      currentAccount = selectedAccount;
+      // Update wallet client with selected account
+      walletClient = createWalletClient({
+        chain: currentNetwork === 'evmFlowMainnet' ? evmFlowMainnet : evmFlowTestnet,
+        account: currentAccount as `0x${string}`,
+        transport: custom(window.ethereum)
+      });
+    } catch (error) {
+      console.error('Error getting selected account:', error);
+      return;
+    }
+
+    const connectButton = document.getElementById('connectWallet');
+    if (connectButton) {
+      connectButton.textContent = 'Disconnect';
+      connectButton.classList.remove('bg-blue-600', 'hover:bg-blue-700');
+      connectButton.classList.add('bg-red-600', 'hover:bg-red-700');
+    }
+    document.getElementById('mintForm')?.classList.remove('hidden');
+    updateStatus(`Connected: ${currentAccount}`, 'success');
+    await updateMintHistory();
+  }
+  updateNetworkDisplay();
+}
+
 function updateNetworkDisplay() {
   const networkDiv = document.getElementById('network');
   if (networkDiv && currentNetwork) {
     const displayName = currentNetwork === 'evmFlowMainnet' ? 'Flow EVM Mainnet' : 'Flow EVM Testnet';
-    networkDiv.textContent = `Network: ${displayName}`;
+    networkDiv.innerHTML = `
+      <div class="flex items-center gap-4">
+        <span>Network: ${displayName}</span>
+        ${currentAccount ? `
+          <div class="flex items-center gap-2">
+            <span class="text-sm text-gray-500">Account:</span>
+            <code class="text-sm font-mono text-gray-700">${currentAccount.slice(0,6)}...${currentAccount.slice(-4)}</code>
+            <button onclick="navigator.clipboard.writeText('${currentAccount}').then(() => showToast('Address copied!', 'success'))"
+              class="p-1 text-gray-500 hover:text-gray-700 transition-colors">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                  d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
+              </svg>
+            </button>
+          </div>
+        ` : ''}
+      </div>
+    `;
   }
 }
 
@@ -236,6 +302,25 @@ async function connectWallet() {
   }
 
   try {
+    const connectButton = document.getElementById('connectWallet');
+    
+    // If already connected, disconnect
+    if (currentAccount) {
+      currentAccount = undefined;
+      if (connectButton) {
+        connectButton.textContent = 'Connect';
+        connectButton.classList.remove('bg-red-600', 'hover:bg-red-700');
+        connectButton.classList.add('bg-blue-600', 'hover:bg-blue-700');
+      }
+      const mintForm = document.getElementById('mintForm');
+      const mintHistory = document.getElementById('mintHistory');
+      if (mintForm) mintForm.classList.add('hidden');
+      if (mintHistory) mintHistory.innerHTML = '';
+      updateStatus('Disconnected', 'info');
+      updateNetworkDisplay();
+      return;
+    }
+
     // Get chain ID first
     const chainId = await window.ethereum.request({ method: 'eth_chainId' });
     
@@ -248,6 +333,14 @@ async function connectWallet() {
     await handleNetworkChange(chainId);
     updateStatus(`Connected: ${account}`, 'success');
     document.getElementById('mintForm')?.classList.remove('hidden');
+    
+    // Update connect button to show disconnect
+    if (connectButton) {
+      connectButton.textContent = 'Disconnect';
+      connectButton.classList.remove('bg-blue-600', 'hover:bg-blue-700');
+      connectButton.classList.add('bg-red-600', 'hover:bg-red-700');
+    }
+    
     await updateMintHistory();
     return account;
   } catch (error) {
@@ -362,7 +455,6 @@ async function mintNFT(tokenUri: string) {
 
     updateStatus('NFT minted successfully!', 'success');
     showToast('NFT minted successfully!', 'success');
-    await updateMintHistory();
   } catch (error) {
     updateStatus('Failed to mint NFT: ' + error.message, 'error');
     showToast('Failed to mint NFT', 'error');
@@ -371,6 +463,8 @@ async function mintNFT(tokenUri: string) {
     if (mintButton) (mintButton as HTMLButtonElement).disabled = false;
     if (mintSpinner) mintSpinner.classList.add('hidden');
     if (mintText) mintText.textContent = 'Mint NFT';
+    // Always refresh mint history after transaction attempt
+    await updateMintHistory();
   }
 }
 
@@ -416,7 +510,6 @@ async function fetchUserMintHistory(address: string, contractAddress: string) {
         const block = await publicClient.getBlock({ blockHash: log.blockHash });
         console.log('Block data for log:', { blockHash: log.blockHash, block });
         return {
-          tokenId: parseInt(log.topics[3], 16),
           timestamp: new Date(Number(block.timestamp) * 1000),
           txHash: log.transactionHash
         };
@@ -447,13 +540,18 @@ async function updateMintHistory() {
     console.log('Checking deployment:', deployment);
     const transactions = await fetchContractTransactions(deployment.address, currentAccount);
     const mints = transactions
-      .filter(tx => tx.method === 'mint' && tx.status === 'ok')
-      .map(tx => ({
-        tokenId: parseInt(tx.decoded_input?.parameters[0]?.value || '0', 16),
-        timestamp: new Date(tx.timestamp),
-        txHash: tx.hash as `0x${string}`,
-        collection: deployment.tag
-      }));
+      .filter(tx => 
+        tx.method === 'mint' && 
+        tx.status === 'ok' && 
+        tx.from.hash.toLowerCase() === currentAccount?.toLowerCase()
+      )
+      .map(tx => {
+        return {
+          timestamp: new Date(tx.timestamp),
+          txHash: tx.hash as `0x${string}`,
+          collection: deployment.tag
+        };
+      });
     allMints.push(...mints);
   }
 
@@ -467,16 +565,14 @@ async function updateMintHistory() {
     <h3 class="text-lg font-semibold text-gray-900 mb-4">Your Mint History</h3>
     ${allMints.length === 0 ? 
       '<p class="text-sm text-gray-500">No minting activity found</p>' :
-      `<div class="space-y-3">
+      `<div class="space-y-0.5">
         ${allMints.map(mint => `
-          <div class="flex items-center justify-between p-3 bg-white rounded-lg shadow-sm">
-            <div>
-              <p class="font-medium text-gray-900">${mint.collection} #${mint.tokenId}</p>
-              <p class="text-sm text-gray-500">${mint.timestamp.toLocaleString()}</p>
-            </div>
+          <div class="flex items-center gap-3 px-2 py-1 bg-white rounded border border-gray-100 hover:bg-gray-50">
+            <span class="font-medium text-gray-900">${mint.collection}</span>
+            <span class="text-xs text-gray-500">${mint.timestamp.toLocaleString()}</span>
             <a href="${chain.blockExplorers?.default.url}/tx/${mint.txHash}" 
-               target="_blank"
-               class="text-blue-600 hover:text-blue-800">
+              target="_blank"
+              class="text-xs text-blue-600 hover:text-blue-800 ml-auto">
               View
             </a>
           </div>
