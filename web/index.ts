@@ -114,17 +114,48 @@ async function loadContracts() {
     });
     
     // Update collection details when a contract is selected
-    select.addEventListener('change', (e) => {
+    select.addEventListener('change', async (e) => {
       const selectedTag = (e.target as HTMLSelectElement).value;
       const deployment = networkDeployments.MyNFT.history.find(d => d.tag === selectedTag);
       if (deployment) {
+        // Update collection details
         updateCollectionDetails(deployment.address);
+        
+        // Prepopulate mint form
+        const metadata = await fetchCollectionMetadata(deployment.address);
+        if (metadata) {
+          const nameInput = document.querySelector('#name') as HTMLInputElement;
+          const descriptionInput = document.querySelector('#description') as HTMLTextAreaElement;
+          const uriInput = document.querySelector('#tokenUri') as HTMLInputElement;
+          const uriPreview = document.querySelector('#uriPreview') as HTMLTextAreaElement;
+          
+          nameInput.value = `${metadata.name} #`;
+          nameInput.placeholder = `${metadata.name} #1`;
+          descriptionInput.placeholder = metadata.description;
+          uriInput.value = metadata.image;
+          uriPreview.value = JSON.stringify(metadata, null, 2);
+        }
       }
     });
 
-    // Show initial collection details
+    // Show initial collection details and prepopulate form for first collection
     if (networkDeployments.MyNFT.history.length > 0) {
-      updateCollectionDetails(networkDeployments.MyNFT.history[0].address);
+      const firstDeployment = networkDeployments.MyNFT.history[0];
+      updateCollectionDetails(firstDeployment.address);
+      fetchCollectionMetadata(firstDeployment.address).then(metadata => {
+        if (metadata) {
+          const nameInput = document.querySelector('#name') as HTMLInputElement;
+          const descriptionInput = document.querySelector('#description') as HTMLTextAreaElement;
+          const uriInput = document.querySelector('#tokenUri') as HTMLInputElement;
+          const uriPreview = document.querySelector('#uriPreview') as HTMLTextAreaElement;
+          
+          nameInput.value = `${metadata.name} #`;
+          nameInput.placeholder = `${metadata.name} #1`;
+          descriptionInput.placeholder = metadata.description;
+          uriInput.value = metadata.image;
+          uriPreview.value = JSON.stringify(metadata, null, 2);
+        }
+      });
     }
   }
 }
@@ -198,7 +229,7 @@ async function connectWallet() {
   }
 }
 
-async function mintNFT(name: string, description: string, imageUrl: string) {
+async function mintNFT(tokenUri: string) {
   if (!currentAccount) {
     updateStatus('Please connect your wallet first', 'error');
     return;
@@ -216,14 +247,14 @@ async function mintNFT(name: string, description: string, imageUrl: string) {
   }
 
   try {
-    const tokenURI = createMetadata(name, description, imageUrl);
-    
     updateStatus('Minting NFT...', 'info');
     const tx = await walletClient.writeContract({
+      account: currentAccount as `0x${string}`,
       address: contract.address as `0x${string}`,
       abi: MyNFTAbi,
       functionName: 'mint',
-      args: [tokenURI]
+      args: [tokenUri],
+      chain: currentNetwork === 'evmFlowMainnet' ? evmFlowMainnet : evmFlowTestnet
     });
     
     const receipt = await publicClient.waitForTransactionReceipt({ hash: tx });
@@ -238,8 +269,8 @@ function updateStatus(message: string, type: 'success' | 'error' | 'info') {
   if (statusDiv) {
     statusDiv.className = `fixed bottom-6 right-6 max-w-md p-4 rounded-lg shadow-lg ${
       type === 'success' ? 'bg-green-50 text-green-800 border border-green-200' :
-      type === 'error' ? 'bg-red-50 text-red-800 border border-red-200' :
-      'bg-blue-50 text-blue-800 border border-blue-200'
+        type === 'error' ? 'bg-red-50 text-red-800 border border-red-200' :
+        'bg-blue-50 text-blue-800 border border-blue-200'
     }`;
     statusDiv.textContent = message;
     statusDiv.classList.remove('hidden');
@@ -263,13 +294,26 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Connect wallet button
   document.getElementById('connectWallet')?.addEventListener('click', connectWallet);
 
-  // Mint form
+  // Add URI preview functionality
+  document.getElementById('tokenUri')?.addEventListener('change', async (e) => {
+    const uriInput = e.target as HTMLInputElement;
+    const uriPreview = document.getElementById('uriPreview') as HTMLTextAreaElement;
+    
+    try {
+      const response = await fetch(uriInput.value);
+      const metadata = await response.json();
+      uriPreview.value = JSON.stringify(metadata, null, 2);
+    } catch (error) {
+      uriPreview.value = 'Error fetching URI content: Invalid URI or format';
+      console.error('Error fetching URI:', error);
+    }
+  });
+
+  // Update mint form handler
   document.getElementById('mintForm')?.addEventListener('submit', async (e) => {
     e.preventDefault();
     const form = e.target as HTMLFormElement;
-    const name = (form.elements.namedItem('name') as HTMLInputElement).value;
-    const description = (form.elements.namedItem('description') as HTMLTextAreaElement).value;
-    const imageUrl = (form.elements.namedItem('imageUrl') as HTMLInputElement).value;
-    await mintNFT(name, description, imageUrl);
+    const tokenUri = (form.elements.namedItem('tokenUri') as HTMLInputElement).value;
+    await mintNFT(tokenUri);
   });
 }); 
