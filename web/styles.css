@@ -81,4 +81,63 @@ h2 {
 
 .primary-button:hover {
     background-color: #1976D2;
+}
+
+.network-display {
+    margin: 10px 0;
+    padding: 8px;
+    background-color: #f8f9fa;
+    border-radius: 4px;
+    border: 1px solid #dee2e6;
+    color: #495057;
+}
+
+.collection-details {
+    margin: 20px 0;
+    padding: 20px;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    background-color: #fff;
+}
+
+.collection-card {
+    display: flex;
+    gap: 20px;
+    align-items: start;
+}
+
+.collection-image {
+    width: 200px;
+    height: 200px;
+    object-fit: cover;
+    border-radius: 8px;
+}
+
+.collection-info {
+    flex: 1;
+}
+
+.collection-info h3 {
+    margin-top: 0;
+    color: #333;
+    font-size: 1.5em;
+}
+
+.collection-info p {
+    color: #666;
+    line-height: 1.6;
+}
+
+.collection-info a {
+    display: inline-block;
+    margin-top: 10px;
+    padding: 8px 16px;
+    background-color: #2196F3;
+    color: white;
+    text-decoration: none;
+    border-radius: 4px;
+}
+
+.collection-info a:hover {
+    background-color: #1976D2;
 } 

@@ -34,27 +34,6 @@ task("verify-metadata", "Verify contract and NFT metadata")
         throw e;
       }
 
-      // Check first few tokens
-      for (let i = 0; i < 3; i++) {
-        try {
-          const tokenURI = await nftContract.read.tokenURI([BigInt(i)]);
-          console.log(`\nToken #${i} URI:`, tokenURI);
-
-          const tokenResponse = await fetch(tokenURI as string);
-          if (!tokenResponse.ok) {
-            throw new Error(`HTTP error! status: ${tokenResponse.status}`);
-          }
-          const tokenMetadata = await tokenResponse.json();
-          console.log(`Token #${i} Metadata:`, JSON.stringify(tokenMetadata, null, 2));
-
-          if (tokenMetadata.image) {
-            const imageResponse = await fetch(tokenMetadata.image);
-            console.log(`Token #${i} Image Accessible:`, imageResponse.ok);
-          }
-        } catch (error) {
-          console.log(`\nToken #${i} not found or error:`, error);
-        }
-      }
     } catch (error) {
       console.error('Error:', error);
     }

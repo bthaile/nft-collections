@@ -32,6 +32,19 @@ export const MyNFTAbi = [
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
-  }
+  },
+  {
+    "inputs": [],
+    "name": "contractURI",
+    "outputs": [
+      {
+        "internalType": "string",
+        "name": "",
+        "type": "string"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
   // Add other contract functions as needed
 ] as const; 

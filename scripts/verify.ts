@@ -7,18 +7,40 @@ dotenv.config();
 
 async function main() {
   const network = process.env.NETWORK || "evmFlowTestnet";
+  const symbol = process.env.SYMBOL;
+  
+  if (!symbol) {
+    console.error("Error: Please set SYMBOL in your environment");
+    process.exit(1);
+  }
+  
   const addresses = JSON.parse(
     readFileSync(join(__dirname, "../deployed-addresses.json"), "utf-8")
   );
   
-  const contractAddress = addresses[network].MyNFT;
-  const accountAddress = process.env.ACCT_ADDRESS;
+  // Find the deployment with the matching symbol
+  const deployment = addresses[network]?.MyNFT?.history.find(
+    (d: any) => d.tag === symbol
+  );
+  
+  if (!deployment) {
+    console.error(`Error: No deployment found for symbol ${symbol} on network ${network}`);
+    process.exit(1);
+  }
+  
+  const contractAddress = deployment.address;
+  const deployerAddress = deployment.deployer;
 
-  if (!accountAddress) {
-    throw new Error("Please set ACCT_ADDRESS in your environment");
+  if (!deployerAddress) {
+    console.error("Error: No deployer address found for this contract");
+    process.exit(1);
   }
 
-  const command = `pnpm hardhat verify --network ${network} ${contractAddress} ${accountAddress}`;
+  console.log(`Verifying contract ${symbol} at ${contractAddress}`);
+  console.log(`Network: ${network}`);
+  console.log(`Deployer: ${deployerAddress}`);
+
+  const command = `pnpm hardhat verify --network ${network} ${contractAddress} ${deployerAddress}`;
   console.log(`Running: ${command}`);
   execSync(command, { stdio: 'inherit' });
 }

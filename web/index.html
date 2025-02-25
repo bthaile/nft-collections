@@ -4,49 +4,61 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>NFT Creator</title>
-    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="styles/main.css">
 </head>
-<body>
-    <div class="container">
-        <h1>NFT Creator</h1>
-        
-        <!-- Wallet Connection -->
-        <button id="connectWallet" class="primary-button">Connect Wallet</button>
-        
-        <!-- Deploy Contract Form -->
-        <form id="deployForm" class="hidden">
-            <h2>Deploy New NFT Contract</h2>
-            <div class="form-group">
-                <label for="contractName">Contract Name:</label>
-                <input type="text" id="contractName" required>
-            </div>
-            <div class="form-group">
-                <label for="contractSymbol">Contract Symbol:</label>
-                <input type="text" id="contractSymbol" required>
-            </div>
-            <button type="submit">Deploy Contract</button>
-        </form>
-
-        <!-- Mint NFT Form -->
-        <form id="mintForm" class="hidden">
-            <h2>Mint New NFT</h2>
-            <div class="form-group">
-                <label for="name">NFT Name:</label>
-                <input type="text" id="name" required>
-            </div>
-            <div class="form-group">
-                <label for="description">Description:</label>
-                <textarea id="description" required></textarea>
-            </div>
-            <div class="form-group">
-                <label for="imageUrl">Image URL:</label>
-                <input type="url" id="imageUrl" required>
-            </div>
-            <button type="submit">Mint NFT</button>
-        </form>
-
-        <div id="status"></div>
+<body class="bg-gray-100 min-h-screen">
+    <!-- Top Bar -->
+    <div class="fixed top-0 left-0 right-0 h-12 bg-white shadow-sm z-50 flex items-center px-4">
+        <h1 class="text-lg font-semibold text-gray-900">NFT Creator</h1>
+        <div id="network" class="ml-auto text-sm text-gray-600"></div>
     </div>
-    <script type="module" src="index.js"></script>
+
+    <div class="max-w-4xl mx-auto pt-16 px-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+        <!-- Left Column: Collection Selection and Details -->
+        <div class="space-y-4">
+            <div class="bg-white rounded-lg shadow-sm p-4">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="flex-1">
+                        <select id="contractSelect" required 
+                            class="w-full p-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                        </select>
+                    </div>
+                    <button id="connectWallet" 
+                        class="ml-2 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors">
+                        Connect
+                    </button>
+                </div>
+                <div id="collectionDetails"></div>
+            </div>
+        </div>
+
+        <!-- Right Column: Mint Form -->
+        <form id="mintForm" class="hidden bg-white rounded-lg shadow-sm p-4">
+            <h2 class="text-lg font-semibold text-gray-900 mb-4">Mint New NFT</h2>
+            <div class="space-y-6">
+                <div class="space-y-2">
+                    <label for="name" class="block text-sm font-medium text-gray-700">NFT Name</label>
+                    <input type="text" id="name" required 
+                        class="w-full p-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                </div>
+                <div class="space-y-2">
+                    <label for="description" class="block text-sm font-medium text-gray-700">Description</label>
+                    <textarea id="description" required rows="3"
+                        class="w-full p-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"></textarea>
+                </div>
+                <div class="space-y-2">
+                    <label for="imageUrl" class="block text-sm font-medium text-gray-700">Image URL</label>
+                    <input type="url" id="imageUrl" required
+                        class="w-full p-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                </div>
+                <button type="submit" 
+                    class="w-full py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors">
+                    Mint NFT
+                </button>
+            </div>
+        </form>
+    </div>
+    <div id="status" class="hidden fixed bottom-6 right-6 max-w-md p-4 rounded-lg shadow-lg"></div>
+    <script type="module" src="index.ts"></script>
 </body>
 </html> 
