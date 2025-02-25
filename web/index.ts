@@ -124,15 +124,18 @@ async function loadContracts() {
         // Prepopulate mint form
         const metadata = await fetchCollectionMetadata(deployment.address);
         if (metadata) {
-          const nameInput = document.querySelector('#name') as HTMLInputElement;
-          const descriptionInput = document.querySelector('#description') as HTMLTextAreaElement;
           const uriInput = document.querySelector('#tokenUri') as HTMLInputElement;
           const uriPreview = document.querySelector('#uriPreview') as HTMLTextAreaElement;
           
-          nameInput.value = `${metadata.name} #`;
-          nameInput.placeholder = `${metadata.name} #1`;
-          descriptionInput.placeholder = metadata.description;
-          uriInput.value = metadata.image;
+          // Get contractURI
+          const contractUri = await publicClient.readContract({
+            address: deployment.address as `0x${string}`,
+            abi: MyNFTAbi,
+            functionName: 'contractURI',
+            args: []
+          });
+          
+          uriInput.value = contractUri as string;
           uriPreview.value = JSON.stringify(metadata, null, 2);
         }
       }
@@ -142,17 +145,20 @@ async function loadContracts() {
     if (networkDeployments.MyNFT.history.length > 0) {
       const firstDeployment = networkDeployments.MyNFT.history[0];
       updateCollectionDetails(firstDeployment.address);
-      fetchCollectionMetadata(firstDeployment.address).then(metadata => {
+      fetchCollectionMetadata(firstDeployment.address).then(async metadata => {
         if (metadata) {
-          const nameInput = document.querySelector('#name') as HTMLInputElement;
-          const descriptionInput = document.querySelector('#description') as HTMLTextAreaElement;
           const uriInput = document.querySelector('#tokenUri') as HTMLInputElement;
           const uriPreview = document.querySelector('#uriPreview') as HTMLTextAreaElement;
           
-          nameInput.value = `${metadata.name} #`;
-          nameInput.placeholder = `${metadata.name} #1`;
-          descriptionInput.placeholder = metadata.description;
-          uriInput.value = metadata.image;
+          // Get contractURI
+          const contractUri = await publicClient.readContract({
+            address: firstDeployment.address as `0x${string}`,
+            abi: MyNFTAbi,
+            functionName: 'contractURI',
+            args: []
+          });
+          
+          uriInput.value = contractUri as string;
           uriPreview.value = JSON.stringify(metadata, null, 2);
         }
       });
@@ -296,18 +302,25 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // Add URI preview functionality
   document.getElementById('tokenUri')?.addEventListener('change', async (e) => {
-    const uriInput = e.target as HTMLInputElement;
-    const uriPreview = document.getElementById('uriPreview') as HTMLTextAreaElement;
-    
+    await updateUriPreview((e.target as HTMLInputElement).value);
+  });
+
+  document.getElementById('tokenUri')?.addEventListener('input', async (e) => {
+    await updateUriPreview((e.target as HTMLInputElement).value);
+  });
+
+  async function updateUriPreview(uri: string) {
     try {
-      const response = await fetch(uriInput.value);
+      const response = await fetch(uri);
       const metadata = await response.json();
+      const uriPreview = document.getElementById('uriPreview') as HTMLTextAreaElement;
       uriPreview.value = JSON.stringify(metadata, null, 2);
     } catch (error) {
-      uriPreview.value = 'Error fetching URI content: Invalid URI or format';
+      const uriPreview = document.getElementById('uriPreview') as HTMLTextAreaElement;
+      uriPreview.value = 'Error: Invalid URI or metadata format';
       console.error('Error fetching URI:', error);
     }
-  });
+  }
 
   // Update mint form handler
   document.getElementById('mintForm')?.addEventListener('submit', async (e) => {
