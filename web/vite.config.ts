@@ -10,13 +10,4 @@ export default defineConfig({
     port: 3000
   },
   base: '/',
-  resolve: {
-    alias: {
-      '@contracts': resolve(__dirname, 'contracts')
-    }
-  },
-  optimizeDeps: {
-    include: ['./contracts/MyNFT.json']
-  },
-  assetsInclude: ['**/*.json']
 }); 

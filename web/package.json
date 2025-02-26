@@ -5,8 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "prebuild": "mkdir -p contracts && cp ../artifacts/contracts/nft-contract.sol/MyNFT.json ./contracts/MyNFT.json",
-    "build": "npm run prebuild && tsc && vite build",
+    "build": "tsc && vite build",
     "preview": "vite preview"
   },
   "dependencies": {
