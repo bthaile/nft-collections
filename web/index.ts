@@ -11,7 +11,7 @@ import {
   CHAIN_ID_TO_NETWORK,
   AccountState as State
 } from './accounts';
-import MyNFTArtifact from './contracts/MyNFT.json';
+import { MyNFTAbi } from './contracts/types';
 import deployedAddresses from '../deployed-addresses.json';
 import { fetchContractTransactions } from './transactions';
 
@@ -21,8 +21,6 @@ interface CollectionMetadata {
   image: string;
   external_link?: string;
 }
-
-const MyNFTAbi = MyNFTArtifact.abi;
 
 declare global {
   interface Window {
