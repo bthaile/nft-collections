@@ -1,0 +1,17 @@
+{
+  "evmFlowMainnet": {
+    "MyNFT": {
+      "history": []
+    }
+  },
+  "evmFlowTestnet": {
+    "MyNFT": {
+      "history": [
+        {
+          "address": "0x...",
+          "tag": "v1"
+        }
+      ]
+    }
+  }
+} 
