@@ -15,9 +15,9 @@
     "noFallthroughCasesInSwitch": true
   },
   "include": [
-    "./**/*.ts",
-    "./**/*.tsx",
-    "./contracts/**/*"
+    "src/**/*.ts",
+    "src/**/*.tsx",
+    "*.ts"
   ],
   "exclude": ["../test", "../node_modules"]
 } 
