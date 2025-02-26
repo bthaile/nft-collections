@@ -359,7 +359,7 @@ async function mintNFT(tokenUri: string) {
       throw new Error('Invalid metadata format - must include name, description, and image');
     }
   } catch (error) {
-    updateStatus('Invalid metadata URI: ' + error.message, 'error');
+    updateStatus('Invalid metadata URI: ' + (error as Error).message, 'error');
     showToast('Invalid metadata URI', 'error');
     return;
   }
@@ -408,11 +408,16 @@ async function mintNFT(tokenUri: string) {
     
     // Get NFT ID from transaction logs
     const log = receipt.logs[0];
-    const { args: { tokenId } } = decodeEventLog({
+    const decoded = decodeEventLog({
       abi: MyNFTAbi,
       data: log.data,
       topics: log.topics,
-    });
+    }) as unknown as { 
+      eventName: string;
+      args: { from: string; to: string; tokenId: bigint }[];
+    };
+    
+    const tokenId = decoded.args[2]; // tokenId is the third argument in the Transfer event
 
     updateStatus('NFT minted successfully!', 'success');
     showToast('NFT minted successfully!', 'success');
@@ -423,7 +428,7 @@ async function mintNFT(tokenUri: string) {
     // Update mint history
     await updateMintHistory();
   } catch (error) {
-    updateStatus('Failed to mint NFT: ' + error.message, 'error');
+    updateStatus('Failed to mint NFT: ' + (error as Error).message, 'error');
     showToast('Failed to mint NFT', 'error');
   } finally {
     // Reset button state
@@ -446,46 +451,6 @@ function updateStatus(message: string, type: 'success' | 'error' | 'info') {
     setTimeout(() => {
       statusDiv.classList.add('hidden');
     }, 5000);
-  }
-}
-
-async function fetchUserMintHistory(address: string, contractAddress: string) {
-  console.log('Fetching mint history for:', { address, contractAddress });
-  try {
-    const logs = await publicClient.getLogs({
-      address: contractAddress as `0x${string}`,
-      event: {
-        type: 'event',
-        name: 'Transfer',
-        inputs: [
-          { type: 'address', name: 'from', indexed: true },
-          { type: 'address', name: 'to', indexed: true },
-          { type: 'uint256', name: 'tokenId', indexed: true }
-        ]
-      },
-      args: {
-        from: '0x0000000000000000000000000000000000000000',
-        to: address as `0x${string}`
-      }
-    });
-    console.log('Found transfer logs:', logs);
-    
-    const mintsWithTimestamps = await Promise.all(
-      logs.map(async log => {
-        const block = await publicClient.getBlock({ blockHash: log.blockHash });
-        console.log('Block data for log:', { blockHash: log.blockHash, block });
-        return {
-          timestamp: new Date(Number(block.timestamp) * 1000),
-          txHash: log.transactionHash
-        };
-      })
-    );
-    
-    console.log('Processed mints:', mintsWithTimestamps);
-    return mintsWithTimestamps;
-  } catch (error) {
-    console.error('Error fetching mint history:', error);
-    return [];
   }
 }
 
