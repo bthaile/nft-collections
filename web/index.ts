@@ -39,6 +39,15 @@ interface MintHistoryItem {
 
 const state = { currentNetwork: undefined } as State;
 
+function resolveIpfsUri(uri: string): string {
+  if (uri.startsWith('ipfs://')) {
+    // Replace ipfs:// with a gateway URL
+    const ipfsId = uri.replace('ipfs://', '');
+    return `https://ipfs.io/ipfs/${ipfsId}`;
+  }
+  return uri;
+}
+
 async function fetchCollectionMetadata(contractAddress: string): Promise<CollectionMetadata | null> {
   try {
     console.log('Fetching metadata for contract:', contractAddress, 'on network:', getCurrentNetwork());
@@ -73,8 +82,16 @@ async function fetchCollectionMetadata(contractAddress: string): Promise<Collect
       };
     }
 
-    const response = await fetch(uri);
+    // Resolve IPFS URI if needed
+    const resolvedUri = resolveIpfsUri(uri);
+    const response = await fetch(resolvedUri);
     const metadata = await response.json();
+
+    // Also resolve any IPFS images in the metadata
+    if (metadata.image && metadata.image.startsWith('ipfs://')) {
+      metadata.image = resolveIpfsUri(metadata.image);
+    }
+
     return metadata;
   } catch (error) {
     console.error('Error fetching collection metadata:', error);
@@ -82,7 +99,7 @@ async function fetchCollectionMetadata(contractAddress: string): Promise<Collect
   }
 }
 
-async function updateCollectionDetails(contractAddress: string) {
+async function updateCollectionDetails(contractAddress: string, selectedTag: string) {
   const collectionDetails = document.getElementById('collectionDetails');
   if (!collectionDetails) return;
 
@@ -97,7 +114,9 @@ async function updateCollectionDetails(contractAddress: string) {
       <img src="${metadata.image}" alt="${metadata.name}" 
         class="w-full h-40 object-cover rounded-lg shadow-sm">
       <div class="flex-1">
-        <h3 class="text-lg font-semibold text-gray-900 mb-2">${metadata.name}</h3>
+        <h3 class="text-lg font-semibold text-gray-900 mb-2">
+          ${metadata.name} (${selectedTag})
+        </h3>
         <p class="text-sm text-gray-600 leading-relaxed mb-3">${metadata.description}</p>
         <div class="flex items-center gap-2 p-2 bg-gray-50 rounded-lg">
           <span class="text-xs text-gray-500">Contract:</span>
@@ -150,13 +169,19 @@ async function loadContracts() {
       }
     });
     
+    // Select first NFT contract and trigger change event
+    if (networkDeployments.MyNFT.history.length > 0) {
+      select.value = networkDeployments.MyNFT.history[0].tag;
+      select.dispatchEvent(new Event('change'));
+    }
+
     // Update collection details when a contract is selected
     select.addEventListener('change', async (e) => {
       const selectedTag = (e.target as HTMLSelectElement).value;
       const deployment = networkDeployments.MyNFT.history.find(d => d.tag === selectedTag);
       if (deployment) {
         // Update collection details
-        updateCollectionDetails(deployment.address);
+        updateCollectionDetails(deployment.address, deployment.tag);
         
         // Prepopulate mint form
         const metadata = await fetchCollectionMetadata(deployment.address);
@@ -181,7 +206,7 @@ async function loadContracts() {
     // Show initial collection details and prepopulate form for first collection
     if (networkDeployments.MyNFT.history.length > 0) {
       const firstDeployment = networkDeployments.MyNFT.history[0];
-      updateCollectionDetails(firstDeployment.address);
+      updateCollectionDetails(firstDeployment.address, firstDeployment.tag);
       fetchCollectionMetadata(firstDeployment.address).then(async metadata => {
         if (metadata) {
           const uriInput = document.querySelector('#tokenUri') as HTMLInputElement;
@@ -234,6 +259,8 @@ async function initClients(chainId: string) {
         const mintForm = document.getElementById('mintForm');
         const mintHistory = document.getElementById('mintHistory');
         const connectButton = document.getElementById('connectWallet');
+        const collectionDetails = document.getElementById('collectionDetails');
+        const contractSelect = document.getElementById('contractSelect') as HTMLSelectElement;
         if (connectButton) {
           connectButton.textContent = 'Connect';
           connectButton.classList.remove('bg-red-600', 'hover:bg-red-700');
@@ -241,7 +268,9 @@ async function initClients(chainId: string) {
         }
         if (mintForm) mintForm.classList.add('hidden');
         if (mintHistory) mintHistory.innerHTML = '';
-        updateStatus('Wallet disconnected', 'info');
+        if (collectionDetails) collectionDetails.innerHTML = '';
+        if (contractSelect) contractSelect.innerHTML = '';
+        updateStatus('Disconnected', 'info');
       },
       onConnect: (account) => {
         const connectButton = document.getElementById('connectWallet');
@@ -319,6 +348,22 @@ function showToast(message: string, type: 'success' | 'error' | 'info') {
 }
 
 async function mintNFT(tokenUri: string) {
+  // Resolve IPFS URI if needed, but keep original URI for minting
+  const resolvedUri = resolveIpfsUri(tokenUri);
+  
+  // Validate metadata format
+  try {
+    const response = await fetch(resolvedUri);
+    const metadata = await response.json();
+    if (!metadata.name || !metadata.description || !metadata.image) {
+      throw new Error('Invalid metadata format - must include name, description, and image');
+    }
+  } catch (error) {
+    updateStatus('Invalid metadata URI: ' + error.message, 'error');
+    showToast('Invalid metadata URI', 'error');
+    return;
+  }
+
   const mintButton = document.getElementById('mintButton');
   const mintSpinner = document.getElementById('mintSpinner');
   const mintText = mintButton?.querySelector('span');
@@ -354,7 +399,7 @@ async function mintNFT(tokenUri: string) {
       address: contract.address as `0x${string}`,
       abi: MyNFTAbi,
       functionName: 'mint',
-      args: [tokenUri],
+      args: [resolvedUri],
       chain: getCurrentNetwork() === 'evmFlowMainnet' ? evmFlowMainnet : evmFlowTestnet
     });
     
@@ -362,49 +407,21 @@ async function mintNFT(tokenUri: string) {
     const receipt = await publicClient.waitForTransactionReceipt({ hash: tx as `0x${string}` });
     
     // Get NFT ID from transaction logs
-    const mintEvent = receipt.logs.find(log => {
-      try {
-        const event = decodeEventLog({
-          abi: MyNFTAbi,
-          data: log.data,
-          topics: log.topics,
-        }) as unknown as { eventName: string; args: { from: string; to: string; tokenId: bigint } };
-        return event?.eventName === 'Transfer' && event?.args?.from === '0x0000000000000000000000000000000000000000';
-      } catch {
-        return false;
-      }
+    const log = receipt.logs[0];
+    const { args: { tokenId } } = decodeEventLog({
+      abi: MyNFTAbi,
+      data: log.data,
+      topics: log.topics,
     });
-    
-    if (mintEvent) {
-      const tokenId = mintEvent.topics[3];
-      if (!tokenId) return;
-      const nftId = parseInt(tokenId, 16);
-      showToast(`NFT #${nftId} minted successfully!`, 'success');
-      
-      // Add to MetaMask if available
-      if (window.ethereum?.isMetaMask) {
-        const watchAssetParams = {
-          type: 'ERC721',
-          options: {
-            address: contract.address,
-            tokenId: tokenId,
-          },
-        };
-        
-        try {
-          await window.ethereum.request({
-            method: 'wallet_watchAsset',
-            params: watchAssetParams,
-          });
-          showToast('NFT added to MetaMask!', 'success');
-        } catch (error) {
-          console.error('Error adding NFT to MetaMask:', error);
-        }
-      }
-    }
 
     updateStatus('NFT minted successfully!', 'success');
     showToast('NFT minted successfully!', 'success');
+    
+    // Wait a few seconds for blockchain indexing
+    await new Promise(resolve => setTimeout(resolve, 2000));
+    
+    // Update mint history
+    await updateMintHistory();
   } catch (error) {
     updateStatus('Failed to mint NFT: ' + error.message, 'error');
     showToast('Failed to mint NFT', 'error');
@@ -413,8 +430,6 @@ async function mintNFT(tokenUri: string) {
     if (mintButton) (mintButton as HTMLButtonElement).disabled = false;
     if (mintSpinner) mintSpinner.classList.add('hidden');
     if (mintText) mintText.textContent = 'Mint NFT';
-    // Always refresh mint history after transaction attempt
-    await updateMintHistory();
   }
 }
 
@@ -512,7 +527,15 @@ async function updateMintHistory() {
 
   const chain = getCurrentNetwork() === 'evmFlowMainnet' ? evmFlowMainnet : evmFlowTestnet;
   historyContainer.innerHTML = `
-    <h3 class="text-lg font-semibold text-gray-900 mb-4">Your Mint History</h3>
+    <div class="flex items-center justify-between mb-4">
+      <h3 class="text-lg font-semibold text-gray-900">Your Mint History</h3>
+      <button id="refreshHistory" class="p-2 text-gray-500 hover:text-gray-700 transition-colors rounded-lg hover:bg-gray-100">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+            d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+        </svg>
+      </button>
+    </div>
     ${allMints.length === 0 ? 
       '<p class="text-sm text-gray-500">No minting activity found</p>' :
       `<div class="space-y-0.5">
@@ -534,6 +557,36 @@ async function updateMintHistory() {
 
 // Initialize the page
 document.addEventListener('DOMContentLoaded', async () => {
+  // Handle URI preview updates
+  document.getElementById('tokenUri')?.addEventListener('input', async (e) => {
+    const uri = (e.target as HTMLInputElement).value;
+    if (uri) {
+      try {
+        const resolvedUri = resolveIpfsUri(uri);
+        const response = await fetch(resolvedUri);
+        const metadata = await response.json();
+        const preview = document.getElementById('uriPreview') as HTMLTextAreaElement;
+        if (preview) {
+          preview.value = JSON.stringify(metadata, null, 2);
+        }
+      } catch (error) {
+        console.error('Error fetching URI:', error);
+        const preview = document.getElementById('uriPreview') as HTMLTextAreaElement;
+        if (preview) {
+          preview.value = 'Error loading metadata. Please check the URI format.';
+        }
+      }
+    }
+  });
+
+  // Refresh history button
+  document.addEventListener('click', async (e) => {
+    if ((e.target as Element).closest('#refreshHistory')) {
+      await updateMintHistory();
+      showToast('Mint history refreshed', 'success');
+    }
+  });
+
   // Connect wallet button
   document.getElementById('connectWallet')?.addEventListener('click', () => {
     connectWallet({
@@ -542,6 +595,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         const mintHistory = document.getElementById('mintHistory');
         const connectButton = document.getElementById('connectWallet');
         const collectionDetails = document.getElementById('collectionDetails');
+        const contractSelect = document.getElementById('contractSelect') as HTMLSelectElement;
         if (connectButton) {
           connectButton.textContent = 'Connect';
           connectButton.classList.remove('bg-red-600', 'hover:bg-red-700');
@@ -550,6 +604,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (mintForm) mintForm.classList.add('hidden');
         if (mintHistory) mintHistory.innerHTML = '';
         if (collectionDetails) collectionDetails.innerHTML = '';
+        if (contractSelect) contractSelect.innerHTML = '';
         updateStatus('Disconnected', 'info');
       },
       onConnect: async (account) => {
@@ -575,28 +630,6 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
     });
   });
-
-  // Add URI preview functionality
-  document.getElementById('tokenUri')?.addEventListener('change', async (e) => {
-    await updateUriPreview((e.target as HTMLInputElement).value);
-  });
-
-  document.getElementById('tokenUri')?.addEventListener('input', async (e) => {
-    await updateUriPreview((e.target as HTMLInputElement).value);
-  });
-
-  async function updateUriPreview(uri: string) {
-    try {
-      const response = await fetch(uri);
-      const metadata = await response.json();
-      const uriPreview = document.getElementById('uriPreview') as HTMLTextAreaElement;
-      uriPreview.value = JSON.stringify(metadata, null, 2);
-    } catch (error) {
-      const uriPreview = document.getElementById('uriPreview') as HTMLTextAreaElement;
-      uriPreview.value = 'Error: Invalid URI or metadata format';
-      console.error('Error fetching URI:', error);
-    }
-  }
 
   // Update mint form handler
   document.getElementById('mintForm')?.addEventListener('submit', async (e) => {

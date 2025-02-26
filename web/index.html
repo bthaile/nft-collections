@@ -9,7 +9,7 @@
 <body class="bg-gray-100 min-h-screen">
     <!-- Top Bar -->
     <div class="fixed top-0 left-0 right-0 h-12 bg-white shadow-sm z-50 flex items-center px-4">
-        <h1 class="text-lg font-semibold text-gray-900">NFT Creator</h1>
+        <h1 class="text-lg font-semibold text-gray-900">Free NFT Minter</h1>
         <div id="network" class="ml-auto text-sm text-gray-600"></div>
     </div>
 
@@ -24,17 +24,21 @@
             <!-- Left Column: Collection Selection and Details -->
             <div class="space-y-4">
                 <div class="bg-white rounded-lg shadow-sm p-4">
-                    <div class="flex items-center justify-between mb-4">
+                    <div class="flex items-end justify-between mb-4 gap-4">
                         <div class="flex-1">
+                            <label for="contractSelect" class="block text-sm font-medium text-gray-700 mb-2">
+                                Select NFT Collection to Mint
+                            </label>
                             <select id="contractSelect" required 
                                 class="w-full p-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                             </select>
                         </div>
                         <button id="connectWallet" 
-                            class="ml-2 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors">
+                            class="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors whitespace-nowrap">
                             Connect
                         </button>
                     </div>
+                    <h3 class="text-lg font-semibold text-gray-900 mb-4">NFT Collection Details</h3>
                     <div id="collectionDetails"></div>
                 </div>
                 <!-- Mint History -->
@@ -49,11 +53,22 @@
                 <div class="space-y-6">
                     <div class="space-y-2">
                         <label for="tokenUri" class="block text-sm font-medium text-gray-700">Token URI</label>
+                        <p class="text-sm text-gray-500 mb-2">
+                            Enter a URI that points to your NFT metadata. The metadata should follow the 
+                            <a href="https://docs.opensea.io/docs/metadata-standards" 
+                               target="_blank" 
+                               class="text-blue-600 hover:text-blue-800">
+                                OpenSea Metadata Standard
+                            </a>
+                        </p>
                         <input type="url" id="tokenUri" required
                             class="w-full p-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                     </div>
                     <div class="mt-4">
                         <label for="uriPreview" class="block text-sm font-medium text-gray-700">URI Content Preview</label>
+                        <p class="text-sm text-gray-500 mb-2">
+                            Preview the metadata that will be associated with your NFT
+                        </p>
                         <textarea id="uriPreview" 
                             class="mt-1 block w-full h-96 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" 
                             readonly></textarea>
