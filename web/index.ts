@@ -1,3 +1,4 @@
+import './styles/index.css'
 import { createPublicClient, http, decodeEventLog } from 'viem';
 import { evmFlowMainnet, evmFlowTestnet } from './chains';
 import { 
@@ -10,7 +11,7 @@ import {
   CHAIN_ID_TO_NETWORK,
   AccountState as State
 } from './accounts';
-import MyNFTArtifact from '../artifacts/contracts/nft-contract.sol/MyNFT.json';
+import MyNFTArtifact from './contracts/MyNFT.json';
 import deployedAddresses from '../deployed-addresses.json';
 import { fetchContractTransactions } from './transactions';
 

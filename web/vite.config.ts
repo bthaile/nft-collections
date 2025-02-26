@@ -1,4 +1,5 @@
 import { defineConfig } from 'vite';
+import { resolve } from 'path';
 
 export default defineConfig({
   root: '.',
@@ -8,5 +9,16 @@ export default defineConfig({
   server: {
     port: 3000
   },
-  base: '/'
+  base: '/',
+  resolve: {
+    alias: [
+      {
+        find: '@contracts',
+        replacement: resolve(__dirname, 'contracts')
+      }
+    ]
+  },
+  optimizeDeps: {
+    include: ['./contracts/MyNFT.json']
+  }
 }); 
