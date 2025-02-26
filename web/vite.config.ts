@@ -11,14 +11,12 @@ export default defineConfig({
   },
   base: '/',
   resolve: {
-    alias: [
-      {
-        find: '@contracts',
-        replacement: resolve(__dirname, 'contracts')
-      }
-    ]
+    alias: {
+      '@contracts': resolve(__dirname, 'contracts')
+    }
   },
   optimizeDeps: {
     include: ['./contracts/MyNFT.json']
-  }
+  },
+  assetsInclude: ['**/*.json']
 }); 
