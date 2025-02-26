@@ -4,5 +4,9 @@
       "source": "/(.*)",
       "destination": "/index.html"
     }
-  ]
+  ],
+  "buildCommand": "cd web && pnpm install && pnpm run build",
+  "outputDirectory": "web/dist",
+  "installCommand": "cd web && pnpm install",
+  "framework": "vite"
 } 
