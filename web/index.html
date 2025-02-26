@@ -13,54 +13,62 @@
         <div id="network" class="ml-auto text-sm text-gray-600"></div>
     </div>
 
-    <div class="max-w-4xl mx-auto pt-16 px-4 grid grid-cols-1 md:grid-cols-2 gap-4">
-        <!-- Left Column: Collection Selection and Details -->
-        <div class="space-y-4">
-            <div class="bg-white rounded-lg shadow-sm p-4">
-                <div class="flex items-center justify-between mb-4">
-                    <div class="flex-1">
-                        <select id="contractSelect" required 
-                            class="w-full p-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                        </select>
+    <!-- Connection Message -->
+    <div class="text-center pt-14 pb-4">
+      <p class="text-gray-600">Please connect your wallet using Flow EVM Mainnet or Testnet to mint NFTs</p>
+    </div>
+
+    <div class="container mx-auto px-4">
+      <div class="max-w-4xl mx-auto">
+        <div class="max-w-4xl mx-auto px-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+            <!-- Left Column: Collection Selection and Details -->
+            <div class="space-y-4">
+                <div class="bg-white rounded-lg shadow-sm p-4">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="flex-1">
+                            <select id="contractSelect" required 
+                                class="w-full p-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                            </select>
+                        </div>
+                        <button id="connectWallet" 
+                            class="ml-2 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors">
+                            Connect
+                        </button>
                     </div>
-                    <button id="connectWallet" 
-                        class="ml-2 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors">
-                        Connect
+                    <div id="collectionDetails"></div>
+                </div>
+                <!-- Mint History -->
+                <div id="mintHistory" class="bg-white rounded-lg shadow-sm p-4">
+                    <!-- Will be populated by JavaScript -->
+                </div>
+            </div>
+
+            <!-- Right Column: Mint Form -->
+            <form id="mintForm" class="hidden bg-white rounded-lg shadow-sm p-4">
+                <h2 class="text-lg font-semibold text-gray-900 mb-4">Mint New NFT</h2>
+                <div class="space-y-6">
+                    <div class="space-y-2">
+                        <label for="tokenUri" class="block text-sm font-medium text-gray-700">Token URI</label>
+                        <input type="url" id="tokenUri" required
+                            class="w-full p-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                    </div>
+                    <div class="mt-4">
+                        <label for="uriPreview" class="block text-sm font-medium text-gray-700">URI Content Preview</label>
+                        <textarea id="uriPreview" 
+                            class="mt-1 block w-full h-96 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" 
+                            readonly></textarea>
+                    </div>
+                    <button type="submit" id="mintButton"
+                        class="w-full py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center">
+                        <span>Mint NFT</span>
+                        <svg class="w-4 h-4 ml-2 hidden animate-spin" id="mintSpinner" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
                     </button>
                 </div>
-                <div id="collectionDetails"></div>
-            </div>
-            <!-- Mint History -->
-            <div id="mintHistory" class="bg-white rounded-lg shadow-sm p-4">
-                <!-- Will be populated by JavaScript -->
-            </div>
+            </form>
         </div>
-
-        <!-- Right Column: Mint Form -->
-        <form id="mintForm" class="hidden bg-white rounded-lg shadow-sm p-4">
-            <h2 class="text-lg font-semibold text-gray-900 mb-4">Mint New NFT</h2>
-            <div class="space-y-6">
-                <div class="space-y-2">
-                    <label for="tokenUri" class="block text-sm font-medium text-gray-700">Token URI</label>
-                    <input type="url" id="tokenUri" required
-                        class="w-full p-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                </div>
-                <div class="mt-4">
-                    <label for="uriPreview" class="block text-sm font-medium text-gray-700">URI Content Preview</label>
-                    <textarea id="uriPreview" 
-                        class="mt-1 block w-full h-96 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" 
-                        readonly></textarea>
-                </div>
-                <button type="submit" id="mintButton"
-                    class="w-full py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center">
-                    <span>Mint NFT</span>
-                    <svg class="w-4 h-4 ml-2 hidden animate-spin" id="mintSpinner" viewBox="0 0 24 24">
-                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                    </svg>
-                </button>
-            </div>
-        </form>
     </div>
     <!-- Toast Container -->
     <div id="toastContainer" class="fixed top-4 right-4 z-50 space-y-4"></div>
