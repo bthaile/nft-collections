@@ -26,7 +26,7 @@
   },
   "evmFlowMainnet": {
     "MyNFT": {
-      "latest": "0x33B5B76d7ee131531A69551c20e89F3D94FA00B9",
+      "latest": "0xe639B37EC6d964ed35b3F2B51200871B22ee6D21",
       "history": [
         {
           "address": "0xf16fc1689047d8cE068b16FBf4F6e942b2f9Fbf4",
@@ -45,6 +45,12 @@
           "timestamp": 1740524457843,
           "deployer": "0x825d7531f79be811e6ed5bd94c9c02d0eb493848",
           "tag": "FNFT"
+        },
+        {
+          "address": "0xe639B37EC6d964ed35b3F2B51200871B22ee6D21",
+          "timestamp": 1740628319874,
+          "deployer": "0x825d7531f79be811e6ed5bd94c9c02d0eb493848",
+          "tag": "VOK"
         }
       ]
     }
