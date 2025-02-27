@@ -5,11 +5,11 @@ cd web
 
 # Install dependencies
 echo "Installing dependencies..."
-npm install
+pnpm install
 
 # Build the project
 echo "Building project..."
-npm run build
+pnpm run build
 
 # Output success message
 echo "Build completed successfully!" 
