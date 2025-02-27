@@ -5,8 +5,8 @@
       "destination": "/index.html"
     }
   ],
-  "buildCommand": "pnpm run build",
-  "outputDirectory": "web/dist",
-  "installCommand": "pnpm install",
+  "buildCommand": "cd web && pnpm install && pnpm run build",
+  "outputDirectory": "dist",
+  "installCommand": "cd web && pnpm install",
   "framework": "vite"
 } 
