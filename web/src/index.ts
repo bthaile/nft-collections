@@ -11,7 +11,7 @@ import {
   CHAIN_ID_TO_NETWORK,
   AccountState as State
 } from './lib/accounts';
-import { MyNFTAbi } from './contracts/MyNFTAbi.js';
+import { MyNFTAbi } from './lib/abi';
 import deployedAddresses from './lib/deployed-addresses.json';
 import { fetchContractTransactions } from './lib/transactions';
 
