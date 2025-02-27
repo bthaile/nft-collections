@@ -20,7 +20,7 @@
     "verify-metadata:mainnet": "hardhat verify-metadata --network evmFlowMainnet --symbol",
     "set-uri": "hardhat run scripts/set-contract-uri.ts",
     "set-uri:testnet": "hardhat set-uri --network evmFlowTestnet --symbol VOK --uri https://raw.githubusercontent.com/bthaile/nft-collections/refs/heads/main/metadata/VolcanicWonder.json",
-    "set-uri:mainnet": "hardhat set-uri --network evmFlowTestnet --symbol VOK --uri https://raw.githubusercontent.com/bthaile/nft-collections/refs/heads/main/metadata/VolcanicWonder.json",
+    "set-uri:mainnet": "hardhat set-uri --network evmFlowMainnet --symbol VOK --uri https://raw.githubusercontent.com/bthaile/nft-collections/refs/heads/main/metadata/VolcanicWonder.json",
     "set-uri:nft": "hardhat set-uri --network evmFlowMainnet --symbol VOK --uri https://raw.githubusercontent.com/bthaile/nft-collections/refs/heads/main/metadata/VolcanicWonder.json",
     "verify:nft": "hardhat verify-contract --network evmFlowMainnet --symbol MNFT",
     "deploy:testnet:NFT": "hardhat deploy --network evmFlowTestnet --symbol VOK --name \"Volcanic NFT\"",
