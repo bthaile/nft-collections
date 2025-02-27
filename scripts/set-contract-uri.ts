@@ -15,7 +15,7 @@ async function main() {
   const nftContract = await hre.viem.getContractAt("MyNFT", NFT_CONTRACT_ADDRESS as `0x${string}`);
 
   // The collection metadata URI
-  const collectionURI = "https://gist.githubusercontent.com/bthaile/3b55982b2611ad45f8f5fa4886784d63/raw/f3c173b1b7afaee48a11c4bc2a284298ff14be69/nft_collection.json";
+  const collectionURI = "https://raw.githubusercontent.com/bthaile/nft-collections/refs/heads/main/metadata/VolcanicWonder.json";
 
   console.log('\nSetting Contract URI for:', NFT_CONTRACT_ADDRESS);
   console.log('New URI:', collectionURI);
