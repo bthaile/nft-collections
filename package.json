@@ -27,9 +27,9 @@
     "deploy:mainnet:NFT": "hardhat deploy --network evmFlowMainnet --symbol FNFT --name \"Forest Mist NFT\"",
     "transfer:testnet": "hardhat transfer --network evmFlowTestnet",
     "transfer:mainnet": "hardhat transfer --network evmFlowMainnet",
-    "dev": "npx vite web",
-    "build": "tsc && vite build web && tailwindcss -i ./web/styles/main.css -o ./dist/web/styles.css",
-    "preview": "vite preview web",
+    "dev": "cd web && pnpm run dev",
+    "build": "node vercel-build.js",
+    "preview": "cd web && pnpm run preview",
     "batch-transfer:mainnet": "hardhat batch-transfer --network evmFlowMainnet --symbol MNFT --to 0x0000000000000000000000021403a2acbc78d508 --start 5 --count 5"
   },
   "keywords": [],
