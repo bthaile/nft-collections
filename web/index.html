@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NFT Creator</title>
+    <title>NFT Minter</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🖼️</text></svg>">
     <link rel="stylesheet" href="styles/main.css">
     <link rel="stylesheet" href="./styles/index.css">
 </head>
@@ -16,7 +17,15 @@
 
     <!-- Connection Message -->
     <div class="text-center pt-14 pb-4">
-      <p class="text-gray-600">Please connect your wallet using Flow EVM Mainnet or Testnet to mint NFTs</p>
+      <p class="text-gray-600">Please connect your wallet using Flow EVM Mainnet or Testnet to mint NFTs. <br>
+      <div class="mt-2 flex justify-center gap-2 hidden" id="networkSwitchButtons">
+        <button id="switchToTestnet" class="px-4 py-1 bg-blue-500 text-white rounded-md text-sm">
+          Switch to Testnet
+        </button>
+        <button id="switchToMainnet" class="px-4 py-1 bg-green-500 text-white rounded-md text-sm">
+          Switch to Mainnet
+        </button>
+      </div>
     </div>
 
     <div class="container mx-auto px-4">
