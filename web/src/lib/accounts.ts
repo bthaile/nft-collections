@@ -1,4 +1,3 @@
-import { getAccount } from 'viem/accounts';
 
 export interface AccountState {
   currentNetwork?: string;

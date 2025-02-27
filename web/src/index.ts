@@ -55,8 +55,8 @@ async function fetchCollectionMetadata(contractAddress: string): Promise<Collect
       return null;
     }
 
-    // First verify the contract exists
-    const code = await publicClient.getCode({
+    // Check if contract exists using getBytecode
+    const code = await publicClient.getBytecode({
       address: contractAddress as `0x${string}`
     });
     
