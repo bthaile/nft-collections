@@ -1,4 +1,15 @@
 #!/bin/bash
+
+# Navigate to web directory
 cd web
-pnpm install
-pnpm run build 
+
+# Install dependencies
+echo "Installing dependencies..."
+npm install
+
+# Build the project
+echo "Building project..."
+npm run build
+
+# Output success message
+echo "Build completed successfully!" 

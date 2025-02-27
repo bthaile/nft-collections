@@ -5,8 +5,8 @@
       "destination": "/index.html"
     }
   ],
-  "buildCommand": "cd web && pnpm install && pnpm run build",
-  "outputDirectory": "dist",
+  "buildCommand": "./web/vercel.build.sh",
+  "outputDirectory": "web/dist",
   "installCommand": "cd web && pnpm install",
   "framework": "vite"
 } 
