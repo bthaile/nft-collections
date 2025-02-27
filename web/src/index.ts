@@ -402,6 +402,7 @@ async function mintNFT(tokenUri: string) {
       functionName: "mint",
       args: [tokenUri],
       account: getCurrentAccount() as `0x${string}`,
+      chain: getCurrentNetwork() === 'evmFlowMainnet' ? evmFlowMainnet : evmFlowTestnet
     });
 
     console.log("Transaction hash:", tx);

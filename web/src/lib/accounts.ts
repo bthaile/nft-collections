@@ -163,10 +163,12 @@ export async function connectWallet({
         "After creating your Flow EVM account, try connecting again.";
       
       // Log detailed information to help diagnose
+      // Get connected wallets from onboard state
+      const connectedWallets = onboard.state.get().wallets;
       console.log("Wallet connection details:", {
-        walletType: wallets[0]?.label || "Unknown wallet",
-        accounts: wallets[0]?.accounts || [],
-        chains: wallets[0]?.chains || []
+        walletType: connectedWallets[0]?.label || "Unknown wallet",
+        accounts: connectedWallets[0]?.accounts || [],
+        chains: connectedWallets[0]?.chains || []
       });
     }
     // Handle unsupported network error more gracefully
