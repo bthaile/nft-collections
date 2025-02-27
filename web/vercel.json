@@ -5,7 +5,7 @@
       "destination": "/index.html"
     }
   ],
-  "buildCommand": "./web/vercel.build.sh",
+  "buildCommand": "node vercel-build.js",
   "outputDirectory": "web/dist",
   "installCommand": "cd web && pnpm install",
   "framework": "vite"
