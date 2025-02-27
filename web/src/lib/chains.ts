@@ -8,16 +8,24 @@ export const evmFlowMainnet = {
     symbol: 'FLOW',
   },
   rpcUrls: {
-    public: { http: ['https://mainnet.evm.nodes.flow.com'] },
-    default: { http: ['https://mainnet.evm.nodes.flow.com'] },
+    public: { 
+      http: [
+        'https://mainnet.evm.nodes.onflow.org',
+      ] 
+    },
+    default: { 
+      http: [
+        'https://mainnet.evm.nodes.onflow.org',
+      ]
+    },
   },
   blockExplorers: {
-    default: { name: 'Flowdiver', url: 'https://flowdiver.io' },
+    default: { name: 'Flowdiver', url: 'https://evm.flowscan.io' },
   }
 } as const;
 
 export const evmFlowTestnet = {
-  id: 646,
+  id: 545,
   name: 'Flow EVM Testnet',
   network: 'evmFlowTestnet',
   nativeCurrency: {
@@ -26,10 +34,18 @@ export const evmFlowTestnet = {
     symbol: 'FLOW',
   },
   rpcUrls: {
-    public: { http: ['https://testnet.evm.nodes.flow.com'] },
-    default: { http: ['https://testnet.evm.nodes.flow.com'] },
+    public: { 
+      http: [
+        'https://testnet.evm.nodes.onflow.org',
+      ]
+    },
+    default: { 
+      http: [
+        'https://testnet.evm.nodes.onflow.org',
+      ]
+    },
   },
   blockExplorers: {
-    default: { name: 'Flowdiver', url: 'https://testnet.flowdiver.io' },
+    default: { name: 'Flowdiver', url: 'https://evm-testnet.flowscan.io' },
   }
 } as const; 
