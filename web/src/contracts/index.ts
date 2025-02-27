@@ -1,0 +1,1 @@
+export { MyNFTAbi } from './abi'; 
