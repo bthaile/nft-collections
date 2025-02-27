@@ -12,7 +12,7 @@ import {
   AccountState as State
 } from './lib/accounts';
 import { MyNFTAbi } from './contracts/abi';
-import deployedAddresses from '../../deployed-addresses.json';
+import deployedAddresses from './lib/deployed-addresses.json';
 import { fetchContractTransactions } from './lib/transactions';
 
 interface CollectionMetadata {

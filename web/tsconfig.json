@@ -12,6 +12,7 @@
     "isolatedModules": true,
     "noEmit": true,
     "strict": true,
+    "checkJs": false,
     "noFallthroughCasesInSwitch": true,
     "baseUrl": ".",
     "paths": {
@@ -19,5 +20,5 @@
     }
   },
   "include": ["src/**/*"],
-  "exclude": ["node_modules"]
+  "exclude": ["node_modules", "dist"]
 } 

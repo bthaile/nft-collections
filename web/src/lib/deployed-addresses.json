@@ -1,17 +1,52 @@
 {
-  "evmFlowMainnet": {
-    "MyNFT": {
-      "history": []
-    }
-  },
   "evmFlowTestnet": {
     "MyNFT": {
+      "latest": "0xc2A60E868fb75B7ea2e24De2e07Ea9e552b5Ab61",
       "history": [
         {
-          "address": "0x...",
-          "tag": "v1"
+          "address": "0x9204EA1F54212963f210EC89c712594FF5291223",
+          "timestamp": 1740508995233,
+          "deployer": "0x825d7531f79be811e6ed5bd94c9c02d0eb493848",
+          "tag": "MNFT"
+        },
+        {
+          "address": "0x3fE47f54Dbb0c9E2C98C3AC1B327720e18C06746",
+          "timestamp": 1740509101450,
+          "deployer": "0x825d7531f79be811e6ed5bd94c9c02d0eb493848",
+          "tag": "ONFT"
+        },
+        {
+          "address": "0xc2A60E868fb75B7ea2e24De2e07Ea9e552b5Ab61",
+          "timestamp": 1740624349575,
+          "deployer": "0x825d7531f79be811e6ed5bd94c9c02d0eb493848",
+          "tag": "VOK"
+        }
+      ]
+    }
+  },
+  "evmFlowMainnet": {
+    "MyNFT": {
+      "latest": "0x33B5B76d7ee131531A69551c20e89F3D94FA00B9",
+      "history": [
+        {
+          "address": "0xf16fc1689047d8cE068b16FBf4F6e942b2f9Fbf4",
+          "timestamp": 1740093674324,
+          "deployer": "0x825d7531f79be811e6ed5bd94c9c02d0eb493848",
+          "tag": "ONFT"
+        },
+        {
+          "address": "0x22e02ca63d84EFD3a4Ce220C139a8b2CdD727b40",
+          "timestamp": 1740168250233,
+          "deployer": "0x825d7531f79be811e6ed5bd94c9c02d0eb493848",
+          "tag": "MNFT"
+        },
+        {
+          "address": "0x33B5B76d7ee131531A69551c20e89F3D94FA00B9",
+          "timestamp": 1740524457843,
+          "deployer": "0x825d7531f79be811e6ed5bd94c9c02d0eb493848",
+          "tag": "FNFT"
         }
       ]
     }
   }
-} 
+}
