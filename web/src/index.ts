@@ -14,6 +14,12 @@ import {
 import { MyNFTAbi } from "./lib/abi";
 import deployedAddresses from "./lib/deployed-addresses.json";
 import { fetchContractTransactions } from "./lib/transactions";
+import {
+  renderEmptyNftState,
+  renderNftLoadingState,
+  renderNftTable,
+} from "./lib/nftTable";
+import { fetchUserNfts } from "./lib/nftFetcher";
 
 interface CollectionMetadata {
   name: string;
@@ -38,6 +44,19 @@ interface MintHistoryItem {
 }
 
 const state = { currentNetwork: undefined } as State;
+
+type DeploymentInfo = {
+  address: string;
+  tag?: string;
+  timestamp?: number;
+  deployer?: string;
+};
+
+function formatDeploymentLabel(deployment: DeploymentInfo): string {
+  if (deployment.tag) return deployment.tag;
+  const address = deployment.address;
+  return `${address.slice(0, 6)}...${address.slice(-4)}`;
+}
 
 function resolveIpfsUri(uri: string): string {
   if (uri.startsWith("ipfs://")) {
@@ -176,37 +195,37 @@ async function loadContracts() {
   const network = getCurrentNetwork();
   console.log("Loading contracts for network:", network);
 
-  const networkDeployments = deployedAddresses[network || "evmFlowTestnet"];
-  console.log("Network deployments:", networkDeployments);
+  const networkKey = network || "evmFlowTestnet";
+  const deployments = getMyNftDeployments(networkKey);
+  console.log("Network deployments:", deployments);
 
-  if (networkDeployments?.MyNFT?.history) {
-    networkDeployments.MyNFT.history.forEach((deployment) => {
-      if (deployment.tag) {
-        const option = document.createElement("option");
-        option.value = deployment.tag;
-        option.textContent = `${deployment.tag} (${deployment.address.slice(
-          0,
-          6
-        )}...${deployment.address.slice(-4)})`;
-        select.appendChild(option);
-      }
+  if (deployments.length) {
+    deployments.forEach((deployment) => {
+      const option = document.createElement("option");
+      option.value = deployment.address;
+      option.textContent = `${formatDeploymentLabel(deployment)} (${deployment.address.slice(
+        0,
+        6
+      )}...${deployment.address.slice(-4)})`;
+      select.appendChild(option);
     });
 
     // Select first NFT contract and trigger change event
-    if (networkDeployments.MyNFT.history.length > 0) {
-      select.value = networkDeployments.MyNFT.history[0].tag;
-      select.dispatchEvent(new Event("change"));
-    }
+    select.value = deployments[0].address;
+    select.dispatchEvent(new Event("change"));
 
     // Update collection details when a contract is selected
     select.addEventListener("change", async (e) => {
-      const selectedTag = (e.target as HTMLSelectElement).value;
-      const deployment = networkDeployments.MyNFT.history.find(
-        (d) => d.tag === selectedTag
+      const selectedAddress = (e.target as HTMLSelectElement).value;
+      const deployment = deployments.find(
+        (d) => d.address === selectedAddress
       );
       if (deployment) {
         // Update collection details
-        updateCollectionDetails(deployment.address, deployment.tag);
+        updateCollectionDetails(
+          deployment.address,
+          formatDeploymentLabel(deployment)
+        );
 
         // Prepopulate mint form
         const metadata = await fetchCollectionMetadata(deployment.address);
@@ -232,32 +251,33 @@ async function loadContracts() {
     });
 
     // Show initial collection details and prepopulate form for first collection
-    if (networkDeployments.MyNFT.history.length > 0) {
-      const firstDeployment = networkDeployments.MyNFT.history[0];
-      updateCollectionDetails(firstDeployment.address, firstDeployment.tag);
-      fetchCollectionMetadata(firstDeployment.address).then(
-        async (metadata) => {
-          if (metadata) {
-            const uriInput = document.querySelector(
-              "#tokenUri"
-            ) as HTMLInputElement;
-            const uriPreview = document.querySelector(
-              "#uriPreview"
-            ) as HTMLTextAreaElement;
+    const firstDeployment = deployments[0];
+    updateCollectionDetails(
+      firstDeployment.address,
+      formatDeploymentLabel(firstDeployment)
+    );
+    fetchCollectionMetadata(firstDeployment.address).then(
+      async (metadata) => {
+        if (metadata) {
+          const uriInput = document.querySelector(
+            "#tokenUri"
+          ) as HTMLInputElement;
+          const uriPreview = document.querySelector(
+            "#uriPreview"
+          ) as HTMLTextAreaElement;
 
-            // Get contractURI
-            const contractUri = await publicClient?.readContract({
-              address: firstDeployment.address as `0x${string}`,
-              abi: MyNFTAbi,
-              functionName: "contractURI",
-            });
+          // Get contractURI
+          const contractUri = await publicClient?.readContract({
+            address: firstDeployment.address as `0x${string}`,
+            abi: MyNFTAbi,
+            functionName: "contractURI",
+          });
 
-            uriInput.value = contractUri as string;
-            uriPreview.value = JSON.stringify(metadata, null, 2);
-          }
+          uriInput.value = contractUri as string;
+          uriPreview.value = JSON.stringify(metadata, null, 2);
         }
-      );
-    }
+      }
+    );
   }
 }
 
@@ -369,10 +389,10 @@ async function mintNFT(tokenUri: string) {
   }
 
   const network = getCurrentNetwork()!;
-  const networkDeployments = deployedAddresses[network];
-  const selectedTag = contractSelect.value;
-  const deployment = networkDeployments.MyNFT.history.find(
-    (d) => d.tag === selectedTag
+  const deployments = getMyNftDeployments(network);
+  const selectedAddress = contractSelect.value;
+  const deployment = deployments.find(
+    (d) => d.address === selectedAddress
   );
 
   if (!deployment) {
@@ -437,6 +457,7 @@ async function mintNFT(tokenUri: string) {
             }
 
             await updateMintHistory();
+          await updateOwnedNfts();
             showToast("Mint history updated", "success");
 
             // Stop refreshing animation
@@ -459,6 +480,41 @@ async function mintNFT(tokenUri: string) {
     if (mintButton) mintButton.removeAttribute("disabled");
     if (mintSpinner) mintSpinner.classList.add("hidden");
     if (buttonText) buttonText.textContent = "Mint NFT";
+  }
+}
+
+async function updateOwnedNfts() {
+  if (!getCurrentAccount() || !getCurrentNetwork() || !publicClient) {
+    renderEmptyNftState();
+    return;
+  }
+
+  const deployments = getMyNftDeployments(getCurrentNetwork()!);
+  if (!deployments.length) {
+    renderEmptyNftState();
+    return;
+  }
+
+  renderNftLoadingState();
+
+  try {
+    const rows = await fetchUserNfts({
+      client: publicClient,
+      account: getCurrentAccount() as `0x${string}`,
+      deployments,
+      resolveUri: resolveIpfsUri,
+    });
+
+    if (!rows.length) {
+      renderEmptyNftState();
+      return;
+    }
+
+    renderNftTable(rows);
+  } catch (error) {
+    console.error("Failed to load owned NFTs:", error);
+    renderEmptyNftState();
+    showToast("Unable to load NFTs from your wallet.", "error");
   }
 }
 
@@ -492,12 +548,22 @@ async function updateMintHistory() {
   const historyContainer = document.getElementById("mintHistory");
   if (!historyContainer) return;
 
-  const networkDeployments = deployedAddresses[getCurrentNetwork()!];
-  console.log("Network deployments:", networkDeployments);
-  if (!networkDeployments?.MyNFT?.history) return;
+  historyContainer.innerHTML = `
+    <div class="flex items-center justify-center py-6 text-sm text-gray-500 gap-2">
+      <svg class="w-5 h-5 animate-spin text-blue-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V2a10 10 0 00-8 16.9l2-1.73A7.963 7.963 0 014 12z"></path>
+      </svg>
+      Loading mint history...
+    </div>
+  `;
+
+  const deployments = getMyNftDeployments(getCurrentNetwork()!);
+  console.log("Network deployments:", deployments);
+  if (!deployments.length) return;
 
   let allMints: MintHistoryItem[] = [];
-  for (const deployment of networkDeployments.MyNFT.history) {
+  for (const deployment of deployments) {
     console.log("Checking deployment:", deployment);
     const transactions = await fetchContractTransactions(
       deployment.address,
@@ -514,7 +580,7 @@ async function updateMintHistory() {
         return {
           timestamp: new Date(tx.timestamp),
           txHash: tx.hash as `0x${string}`,
-          collection: deployment.tag,
+          collection: formatDeploymentLabel(deployment),
         };
       });
     allMints.push(...mints);
@@ -573,6 +639,7 @@ async function updateMintHistory() {
       }
 
       await updateMintHistory();
+      await updateOwnedNfts();
       showToast("Mint history updated", "success");
 
       // Remove animation when done
@@ -582,8 +649,52 @@ async function updateMintHistory() {
     });
 }
 
+function getMyNftDeployments(networkKey: string): DeploymentInfo[] {
+  const networkConfig =
+    (deployedAddresses as Record<string, any>)[networkKey] ?? undefined;
+  const myNftConfig = networkConfig?.MyNFT;
+  if (!myNftConfig) return [];
+
+  const history: DeploymentInfo[] = Array.isArray(myNftConfig.history)
+    ? [...myNftConfig.history]
+    : [];
+
+  const historyByAddress = new Map(
+    history.map((deployment) => [deployment.address.toLowerCase(), deployment])
+  );
+
+  const seen = new Set<string>();
+  const deployments: DeploymentInfo[] = [];
+
+  if (typeof myNftConfig.latest === "string") {
+    const latestLower = myNftConfig.latest.toLowerCase();
+    const historyMatch = historyByAddress.get(latestLower);
+    const latestTag = historyMatch?.tag ?? "LATEST";
+    deployments.push({
+      address: myNftConfig.latest,
+      tag: latestTag,
+      timestamp: historyMatch?.timestamp,
+      deployer: historyMatch?.deployer,
+    });
+    seen.add(latestLower);
+  }
+
+  history
+    .sort((a, b) => (b.timestamp ?? 0) - (a.timestamp ?? 0))
+    .forEach((deployment) => {
+      const key = deployment.address.toLowerCase();
+      if (!seen.has(key)) {
+        seen.add(key);
+        deployments.push(deployment);
+      }
+    });
+
+  return deployments;
+}
+
 // Initialize the page
 document.addEventListener("DOMContentLoaded", async () => {
+  renderEmptyNftState();
   // Handle network switching buttons
   document
     .getElementById("switchToTestnet")
@@ -669,6 +780,7 @@ document.addEventListener("DOMContentLoaded", async () => {
           if (mintHistory) mintHistory.innerHTML = "";
           if (collectionDetails) collectionDetails.innerHTML = "";
           if (contractSelect) contractSelect.innerHTML = "";
+          renderEmptyNftState();
           updateStatus("Disconnected", "info");
         },
       });
@@ -723,6 +835,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         if (mintHistory) mintHistory.innerHTML = "";
         if (collectionDetails) collectionDetails.innerHTML = "";
         if (contractSelect) contractSelect.innerHTML = "";
+        renderEmptyNftState();
         updateStatus("Disconnected", "info");
       },
       onConnect: async (account) => {
@@ -741,6 +854,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         updateStatus(`Connected: ${account}`, "success");
         await loadContracts();
         await updateMintHistory();
+        await updateOwnedNfts();
       },
       onError: (error) => {
         updateStatus("Failed to connect wallet: " + error.message, "error");

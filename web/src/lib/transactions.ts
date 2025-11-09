@@ -30,7 +30,7 @@ export async function fetchContractTransactions(contractAddress: string, userAdd
       : 'https://evm-testnet.flowscan.io';
 
     const response = await fetch(
-      `${baseUrl}/api/v2/addresses/${contractAddress}/transactions?filter=to%20%7C%20from${userAddress}`
+      `${baseUrl}/api/v2/addresses/${contractAddress}/transactions`
     );
     
     if (!response.ok) {
@@ -39,8 +39,16 @@ export async function fetchContractTransactions(contractAddress: string, userAdd
     }
 
     const data: TransactionResponse = await response.json();
-    console.log('Transaction data:', data.items[0]); // Log first transaction for debugging
-    return data?.items || [];
+    const lowerAddress = userAddress.toLowerCase();
+
+    const filtered = (data?.items || []).filter((tx) => {
+      const toMatch = tx.to?.hash?.toLowerCase() === lowerAddress;
+      const fromMatch = tx.from?.hash?.toLowerCase() === lowerAddress;
+      return toMatch || fromMatch;
+    });
+
+    console.log('Transaction data filtered count:', filtered.length);
+    return filtered;
   } catch (error) {
     console.error('Error fetching transactions:', error);
     return [];

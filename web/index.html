@@ -8,10 +8,10 @@
     <link rel="stylesheet" href="styles/main.css">
     <link rel="stylesheet" href="./styles/index.css">
 </head>
-<body class="bg-gray-100 min-h-screen">
+<body class="bg-gray-100 min-h-screen overflow-y-auto">
     <!-- Top Bar -->
     <div class="fixed top-0 left-0 right-0 h-12 bg-white shadow-sm z-50 flex items-center px-4">
-        <h1 class="text-lg font-semibold text-gray-900">Free NFT Minter</h1>
+        <h1 class="text-lg font-semibold text-gray-900">Free EVM NFT Minter</h1>
         <div id="network" class="ml-auto text-sm text-gray-600"></div>
     </div>
 
@@ -57,7 +57,7 @@
                     <div id="collectionDetails"></div>
                 </div>
                 <!-- Mint History -->
-                <div id="mintHistory" class="bg-white rounded-lg shadow-sm p-4">
+                <div id="mintHistory" class="bg-white rounded-lg shadow-sm p-4 max-h-60 overflow-y-auto">
                     <!-- Will be populated by JavaScript -->
                 </div>
             </div>
@@ -98,6 +98,9 @@
                     </button>
                 </div>
             </form>
+            <div id="ownedNfts" class="md:col-span-2">
+                <!-- NFT table renders here -->
+            </div>
         </div>
     </div>
     <!-- Toast Container -->

@@ -4,7 +4,7 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
+    "dev": "vite --port 5000",
     "build": "tsc --noEmit --project tsconfig.json && vite build && tailwindcss -i ./src/styles/index.css -o ./dist/styles.css",
     "preview": "vite preview"
   },

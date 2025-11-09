@@ -27,7 +27,7 @@
     "deploy:mainnet:NFT": "hardhat deploy --network evmFlowMainnet --symbol VOK --name \"Volcanic NFT\"",
     "transfer:testnet": "hardhat transfer --network evmFlowTestnet",
     "transfer:mainnet": "hardhat transfer --network evmFlowMainnet",
-    "dev": "cd web && pnpm run dev",
+    "dev": "cd web && pnpm run dev -- --port 5000",
     "build": "node vercel-build.js",
     "preview": "cd web && pnpm run preview",
     "batch-transfer:mainnet": "hardhat batch-transfer --network evmFlowMainnet --symbol MNFT --to 0x0000000000000000000000021403a2acbc78d508 --start 5 --count 5"
@@ -66,5 +66,6 @@
     "typescript": "~5.4.5",
     "vite": "^5.1.4",
     "viem": "^2.23.3"
-  }
+  },
+  "packageManager": "pnpm@9.15.4+sha512.b2dc20e2fc72b3e18848459b37359a32064663e5627a51e4c74b2c29dd8e8e0491483c3abb40789cfd578bf362fb6ba8261b05f0387d76792ed6e23ea3b1b6a0"
 }
