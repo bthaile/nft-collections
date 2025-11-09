@@ -8,6 +8,9 @@ interface TransactionItem {
   from: {
     hash: string;
   };
+  to?: {
+    hash: string;
+  };
   decoded_input?: {
     method_call: string;
     parameters: Array<{
